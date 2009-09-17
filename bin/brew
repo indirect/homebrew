@@ -71,13 +71,13 @@ begin
         puts "You must specify a formula. Search for available formulae with `brew search'."
         exit 0
       end
-      
+
       raise "Cannot write to #{HOMEBREW_PREFIX}" unless HOMEBREW_PREFIX.writable?
 
       require 'brewkit'
 
       if ARGV.interactive? and ARGV.formulae.length > 1
-        # the reason for this is interactive mode is a little tricky to do 
+        # the reason for this is interactive mode is a little tricky to do
         # with more than one formula, AND I can't think of a time where you'd
         # want to do it anyway. If someone comes up with a legitimate use for
         # this we will adapt the code. "But I might want it!" is not a
@@ -130,7 +130,7 @@ begin
           done << f.class
 
           # 1. formulae can modify ENV, so we must ensure that each
-          #    installation has a pristine ENV when it starts, forking now is 
+          #    installation has a pristine ENV when it starts, forking now is
           #    the easiest way to do this
           # 2. formulae have access to __END__ the only way to allow this is
           #    to make the formula script the executed script
@@ -145,6 +145,22 @@ begin
         end
       end
 
+    when 'out', 'outdated'
+      installed = {}
+      Dir[HOMEBREW_CELLAR+"*/*"].map{|f| f.split("/")[-2..-1] }.each do |name, version|
+        installed[name] ||= []
+        installed[name] << version
+      end
+      outdated = {}
+      installed.each do |name, versions|
+        require 'formula'
+        f = Formula.factory name
+        outdated.merge!(name => [versions.last, f.version]) unless versions.include?(f.version)
+      end
+      ohai "You can update:" if outdated.any?
+      outdated.each do |name, versions|
+        ohai "  #{name} from #{versions.first} to #{versions.last}"
+      end
 
     when 'up', 'update'
       require 'update'
