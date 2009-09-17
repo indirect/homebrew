@@ -26,23 +26,23 @@ class RefreshBrew
   UPDATE_COMMAND   = 'git pull origin master'
   REVISION_COMMAND = 'git log -l -1 --pretty=format:%H'
   GIT_UP_TO_DATE   = 'Already up-to-date.'
-  
+
   formula_regexp   = 'Library/Formula/(.+?)\.rb'
   ADDED_FORMULA    = %r{^\s+create mode \d+ #{formula_regexp}$}
   UPDATED_FORMULA  = %r{^\s+#{formula_regexp}\s}
-  
+
   attr_reader :added_formulae, :updated_formulae
-  
+
   def initialize
     @added_formulae, @updated_formulae = [], []
   end
-  
+
   # Performs an update of the homebrew source. Returns +true+ if a newer
   # version was available, +false+ if already up-to-date.
   def update_from_masterbrew!
     git_checkout_masterbrew!
     output = git_pull!
-    
+
     output.split("\n").reverse.each do |line|
       case line
       when ADDED_FORMULA
@@ -53,24 +53,24 @@ class RefreshBrew
     end
     @added_formulae.sort!
     @updated_formulae.sort!
-    
+
     output.strip != GIT_UP_TO_DATE
   end
-  
+
   def pending_formulae_changes?
     !@updated_formulae.empty?
   end
-  
+
   def current_revision
     in_prefix { execute(REVISION_COMMAND).strip }
   end
-  
+
   private
-  
+
   def in_prefix
-    Dir.chdir(HOMEBREW_PREFIX) { yield }
+    Dir.chdir(HOMEBREW_REPO) { yield }
   end
-  
+
   def execute(cmd)
     out = `#{cmd}`
     unless $?.success?
@@ -80,11 +80,11 @@ class RefreshBrew
     ohai(cmd, out) if ARGV.verbose?
     out
   end
-  
+
   def git_checkout_masterbrew!
     in_prefix { execute CHECKOUT_COMMAND }
   end
-  
+
   def git_pull!
     in_prefix { execute UPDATE_COMMAND }
   end
