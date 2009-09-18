@@ -165,6 +165,12 @@ module HomebrewEnvExtension
   def m64
     append_to_cflags '-m64'
     ENV['LDFLAGS'] += '-arch x86_64'
+  # Snow Leopard binaries are universal, so readline has to be
+  # universal too if you want to use it with, say, irb
+  def universal
+    remove_from_cflags '-m64'
+    append_to_cflags '-mfpmath=sse'
+    append 'LDFLAGS', '-arch i386'
   end
 
 private
