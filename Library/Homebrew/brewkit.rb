@@ -168,9 +168,9 @@ module HomebrewEnvExtension
   # Snow Leopard binaries are universal, so readline has to be
   # universal too if you want to use it with, say, irb
   def universal
-    remove_from_cflags '-m64'
-    append_to_cflags '-mfpmath=sse'
     append 'LDFLAGS', '-arch i386'
+    append 'LDFLAGS', '-arch ppc7400'
+    ENV['CFLAGS']=ENV['CXXFLAGS']="-O3 #{BREWKIT_SAFE_FLAGS}"
   end
 
 private
