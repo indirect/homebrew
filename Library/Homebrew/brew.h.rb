@@ -100,7 +100,7 @@ def make url
       name = gots
     end
   end
-  
+
   __make url, name
 end
 
@@ -181,6 +181,51 @@ def expand_deps ff
   deps << ff
 end
 
+def update
+  require 'update'
+  updater = RefreshBrew.new
+  old_revision = updater.current_revision
+  unless updater.update_from_masterbrew!
+    puts "Already up-to-date."
+  else
+    puts "Updated Homebrew from #{old_revision[0,8]} to #{updater.current_revision[0,8]}."
+    if updater.pending_formulae_changes?
+      ohai "The following formulae were updated:"
+      puts_columns updater.updated_formulae
+    else
+      puts "No formulae were updated." unless updater.pending_formulae_changes?
+    end
+  end
+end
+
+def upgrade
+  outdated.each do |name, versions|
+    ohai "Upgrading #{name} to #{versions.last}"
+
+    # This would be simpler if we `brew rm`ed the old version first but
+    # that scares me -- let's not screw people if the install fails
+    if system "brew install #{name}"
+      ohai "Removing #{name} #{versions.first}"
+      FileUtils.rm_rf HOMEBREW_CELLAR+name+versions.first
+    end
+  end
+end
+
+def link(kegs)
+  kegs.each {|keg| puts "#{keg.link} links created for #{keg}"}
+end
+
+def unlink(kegs)
+  kegs.each {|keg| puts "#{keg.unlink} links removed for #{keg}"}
+end
+
+def remove(kegs)
+  kegs.each do |keg|
+    puts "Uninstalling #{keg}..."
+    keg.uninstall
+  end
+  prune
+end
 
 def prune
   $n=0
@@ -211,7 +256,6 @@ def prune
     puts  "from #{HOMEBREW_PREFIX}"
   end
 end
-
 
 def diy
   path=Pathname.getwd
@@ -269,7 +313,7 @@ def warn_about_macports_or_fink
   # http://github.com/mxcl/homebrew/issues/#issue/13
   # http://github.com/mxcl/homebrew/issues/#issue/41
   # http://github.com/mxcl/homebrew/issues/#issue/48
-  
+
   %w[port fink].each do |ponk|
     path = `/usr/bin/which -s #{ponk}`
     unless path.empty?
@@ -277,7 +321,7 @@ def warn_about_macports_or_fink
       puts "If formula fail to build try renaming or uninstalling these tools."
     end
   end
-  
+
   # we do the above check because macports can be relocated and fink may be
   # able to be relocated in the future. This following check is because if
   # fink and macports are not in the PATH but are still installed it can
@@ -288,9 +332,9 @@ def warn_about_macports_or_fink
       puts "If formula fail to build, consider renaming: %s" % Pathname.new(ponk).dirname.parent
     end
   end
-  
+
   # finally sometimes people make their MacPorts or Fink read-only so they
-  # can quickly test Homebrew out, but still in theory obey the README's 
+  # can quickly test Homebrew out, but still in theory obey the README's
   # advise to rename the root directory. This doesn't work, many build scripts
   # error out when they try to read from these now unreadable directories.
   %w[/sw /opt/local].each do |path|
