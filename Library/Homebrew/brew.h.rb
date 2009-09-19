@@ -153,7 +153,7 @@ end
 
 def clean f
   Cleaner.new f
- 
+
   # Hunt for empty folders and nuke them unless they are
   # protected by f.skip_clean?
   # We want post-order traversal, so put the dirs in a stack
@@ -222,7 +222,7 @@ def diy
     version=path.version
     raise "Couldn't determine version, try --set-version" if version.nil? or version.empty?
   end
-  
+
   if ARGV.include? '--set-name'
     name=ARGV.next
   else
@@ -243,6 +243,26 @@ def diy
   end
 end
 
+def installed
+  kegs = Dir[HOMEBREW_CELLAR+"*/*"].map{|f| f.split("/")[-2..-1] }
+  kegs.inject({}) do |installed, (name, version)|
+    installed[name] ||= []
+    installed[name] << version
+    installed
+  end
+end
+
+def outdated
+  require 'formula'
+  @outdated ||= installed.inject({}) do |outdated, (name, versions)|
+    newest = Formula.factory(name).version
+    unless versions.include?(newest) || versions.last > newest
+      outdated.merge(name => [versions.last, newest])
+    else
+      outdated
+    end
+  end
+end
 
 def warn_about_macports_or_fink
   # See these issues for some history:
@@ -326,7 +346,7 @@ private
         puts pn
         other = 'other '
       else
-        remaining_root_files << pn 
+        remaining_root_files << pn
       end
     end
 
@@ -356,13 +376,13 @@ end
 class Cleaner
   def initialize f
     @f=f
-    
+
     # correct common issues
     share=f.prefix+'share'
     (f.prefix+'man').mv share rescue nil
-    
+
     [f.bin, f.sbin, f.lib].each {|d| clean_dir d}
-    
+
     # you can read all of this stuff online nowadays, save the space
     # info pages are pants, everyone agrees apart from Richard Stallman
     # feel free to ask for build options though! http://bit.ly/Homebrew

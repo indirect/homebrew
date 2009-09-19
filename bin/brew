@@ -149,21 +149,28 @@ begin
         end
       end
 
-    when 'out', 'outdated'
-      installed = {}
-      Dir[HOMEBREW_CELLAR+"*/*"].map{|f| f.split("/")[-2..-1] }.each do |name, version|
-        installed[name] ||= []
-        installed[name] << version
-      end
-      outdated = {}
+    when 'installed'
       installed.each do |name, versions|
-        require 'formula'
-        f = Formula.factory name
-        outdated.merge!(name => [versions.last, f.version]) unless versions.include?(f.version)
+        puts "#{name} #{versions.join(", ")}"
       end
+
+    when 'outdated'
       ohai "You can update:" if outdated.any?
       outdated.each do |name, versions|
         ohai "  #{name} from #{versions.first} to #{versions.last}"
+      end
+
+    when 'upgrade'
+      system "brew outdated"
+      outdated.each do |name, versions|
+        ohai "Upgrading #{name} to #{versions.last}"
+
+        # This would be simpler if we `brew rm`ed the old version first but
+        # that scares me -- let's not screw people if the install fails
+        if system "brew install #{name}"
+          ohai "Removing #{name} #{versions.first}"
+          FileUtils.rm_rf HOMEBREW_CELLAR+name+versions.first
+        end
       end
 
     when 'up', 'update'
