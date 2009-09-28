@@ -57,7 +57,7 @@ class Formula
     set_instance_variable 'version'
     @version ||= Pathname.new(@url).version
     validate_variable :version if @version
-    
+
     set_instance_variable 'homepage'
 #    raise if @homepage.nil? # not a good idea while we have eg GitManpages!
 
@@ -272,7 +272,7 @@ private
       yield
     end
   end
-  
+
   def patch
     return if patches.nil?
 
@@ -317,7 +317,7 @@ private
         patch_list << p
       end
     end
-    
+
     return if patch_list.empty?
 
     # downloading all at once is much more efficient, espeically for FTP
@@ -335,10 +335,10 @@ private
   end
 
   def validate_variable name
-    v=eval "@#{name}"
+    v = instance_variable_get("@#{name}")
     raise "Invalid @#{name}" if v.to_s.empty? or v =~ /\s/
   end
-  
+
   def set_instance_variable(type)
     if !instance_variable_defined?("@#{type}")
       class_value = self.class.send(type)
@@ -360,9 +360,9 @@ private
         }
       end
     end
-    
+
     attr_rw :url, :version, :homepage, :head, :deps, *CHECKSUM_TYPES
-    
+
     def depends_on name, *args
       @deps ||= []
 
@@ -384,7 +384,7 @@ private
       # step for some reason I am not sure about
       @deps << name unless @deps.include? name
     end
-  end  
+  end
 end
 
 # see ack.rb for an example usage
