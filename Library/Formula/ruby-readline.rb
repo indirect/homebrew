@@ -32,6 +32,6 @@ __END__
  require "mkmf"
 
 +$CFLAGS << " -I/usr/local/include "
-+$LDFLAGS << " -L/usr/local/lib "
++$LDFLAGS << " -arch i386 -arch x86_64 -arch ppc7400 -L/usr/local/lib "
 +
  $readline_headers = ["stdio.h"]
