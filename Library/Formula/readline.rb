@@ -21,6 +21,8 @@ to keg-only.
     end
   end
 
+  def skip_clean? path; true; end
+
   def install
     ENV.universal # doh. but I want IRB so bad
 
