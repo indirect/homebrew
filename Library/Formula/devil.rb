@@ -5,6 +5,8 @@ class Devil <Formula
   homepage 'http://sourceforge.net/projects/openil/'
   md5 '7918f215524589435e5ec2e8736d5e1d'
   
+  depends_on 'jpeg'
+  
   def patches
     DATA
   end
