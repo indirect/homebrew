@@ -345,7 +345,7 @@ private
     end
   end
 
-  CHECKSUM_TYPES=[:md5, :sha1, :sha256].freeze
+  CHECKSUM_TYPES = [:md5, :sha1, :sha256].freeze unless defined?(CHECKSUM_TYPES)
 
   def verify_download_integrity fn
     require 'digest'
