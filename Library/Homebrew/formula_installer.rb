@@ -21,7 +21,10 @@ class FormulaInstaller
   end
 
   def pyerr dep
-    brew_pip = ' brew install pip &&' unless Formula.factory('pip').installed?
+    # When running tests, the pip formula isn't visible,
+    # so we'll assume it isn't installed for tests.
+    pip_installed = Formula.factory('pip').installed? rescue false
+    brew_pip = ' brew install pip &&' unless pip_installed
     <<-EOS
 Unsatisfied dependency, #{dep}
 Homebrew does not provide formula for Python dependencies, pip does:
@@ -51,27 +54,31 @@ Homebrew does not provide formulae for Ruby dependencies, rubygems does:
     return unless f.external_deps
 
     f.external_deps[:python].each do |dep|
-      raise pyerr(dep) unless quiet_system "/usr/bin/env python", "-c", "import #{dep}"
+      raise pyerr(dep) unless quiet_system "/usr/bin/env python -c \"import #{dep}\""
     end
     f.external_deps[:perl].each do |dep|
       raise plerr(dep) unless quiet_system "/usr/bin/env perl", "-e", "use #{dep}"
     end
     f.external_deps[:ruby].each do |dep|
-      raise rberr(dep) unless quiet_system "/usr/bin/env", "ruby", "-rubygems", "-e \"require '#{dep}'\""
+      raise rberr(dep) unless quiet_system "/usr/bin/env ruby -rubygems -e \"require '#{dep}'\""
+    end
+  end
+  
+  def check_formula_deps f
+    expand_deps(f).each do |dep|
+      begin
+        install_private dep unless dep.installed?
+      rescue
+        #TODO continue if this is an optional dep
+        raise
+      end
     end
   end
 
   def install f
     if @install_deps
       check_external_deps f
-      expand_deps(f).each do |dep|
-        begin
-          install_private dep unless dep.installed?
-        rescue
-          #TODO continue if this is an optional dep
-          raise
-        end
-      end
+      check_formula_deps f
     end
 
     install_private f
