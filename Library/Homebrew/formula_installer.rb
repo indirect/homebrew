@@ -35,7 +35,15 @@ Unsatisfied dependency, #{dep}
 Homebrew does not provide formula for Perl dependencies, cpan does:
 
     cpan -i #{dep}
-  
+
+    EOS
+  end
+  def rberr dep; <<-EOS
+Unsatisfied dependency "#{dep}"
+Homebrew does not provide formulae for Ruby dependencies, rubygems does:
+
+    gem install #{dep}
+
     EOS
   end
 
@@ -48,19 +56,24 @@ Homebrew does not provide formula for Perl dependencies, cpan does:
     f.external_deps[:perl].each do |dep|
       raise plerr(dep) unless quiet_system "/usr/bin/perl", "-e", "use #{dep}"
     end
+    f.external_deps[:ruby].each do |dep|
+      raise rberr(dep) unless quiet_system "/usr/bin/env", "ruby", "-rubygems", "-e \"require '#{dep}'\""
+    end
   end
 
   def install f
-    expand_deps(f).each do |dep|
-      begin
-        check_external_deps f
-        install_private dep unless dep.installed?
-      rescue
-        #TODO continue if this is an optional dep
-        raise
+    if @install_deps
+      check_external_deps f
+      expand_deps(f).each do |dep|
+        begin
+          install_private dep unless dep.installed?
+        rescue
+          #TODO continue if this is an optional dep
+          raise
+        end
       end
-    end if @install_deps
-    
+    end
+
     install_private f
   end
   
