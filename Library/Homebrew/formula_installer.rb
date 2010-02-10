@@ -54,16 +54,16 @@ Homebrew does not provide formulae for Ruby dependencies, rubygems does:
     return unless f.external_deps
 
     f.external_deps[:python].each do |dep|
-      raise pyerr(dep) unless quiet_system "/usr/bin/env python -c \"import #{dep}\""
+      raise pyerr(dep) unless quiet_system "/usr/bin/env", "python", "-c", "import #{dep}"
     end
     f.external_deps[:perl].each do |dep|
-      raise plerr(dep) unless quiet_system "/usr/bin/env perl", "-e", "use #{dep}"
+      raise plerr(dep) unless quiet_system "/usr/bin/env", "perl", "-e", "use '#{dep}'"
     end
     f.external_deps[:ruby].each do |dep|
-      raise rberr(dep) unless quiet_system "/usr/bin/env ruby -rubygems -e \"require '#{dep}'\""
+      raise rberr(dep) unless quiet_system "/usr/bin/env", "ruby", "-rubygems", "-e", "require '#{dep}'"
     end
   end
-  
+
   def check_formula_deps f
     expand_deps(f).each do |dep|
       begin
