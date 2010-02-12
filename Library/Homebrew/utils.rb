@@ -54,7 +54,7 @@ def ohai title, *sput
 end
 
 def opoo warning
-  puts "#{Tty.red}Warning#{Tty.reset}: #{warning}"
+  puts "#{Tty.yellow}Warning#{Tty.reset}: #{warning}"
 end
 
 def onoe error
